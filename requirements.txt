@@ -1,1 +1,25 @@
 flask
+
+for i in dft_count.columns:
+        for j in dft_count.columns:
+            list_1 = (df_test[df_test['']==i])..unique()
+            list_2 = (df_test[df_test['']==j])..unique()
+            ifor_val = len(list(set(list_1) & set(list_2)))
+            dft_count.at[i,j]=ifor_val
+    dft=dft_count.copy()
+    arr_corr = dft.values
+    if dft.columns.size > 1 :
+        arr_corr[np.triu_indices_from(arr_corr, k=1)] = np.nan
+        fig, ax = plt.subplots(figsize=(38, 28))
+        hm = sns.heatmap(arr_corr, cbar=True, vmin=-0.5, vmax=0.5,
+                         fmt='.0f', annot_kws={'size': 5}, annot=True,
+                         square=True, cmap=plt.cm.Blues)
+        ticks = np.arange(dft.shape[0]) + 0.5
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(dft.columns, rotation=90, fontsize=8)
+        ax.set_yticks(ticks)
+        ax.set_yticklabels(dft.index, rotation=360, fontsize=8)
+        ax.set_title('correlation matrix')
+        #plt.tight_layout()
+        plt.savefig("results_2024/"+APP+"/corr_PA_count_"+APP+".jpg", dpi=300)
+    plt.close()
