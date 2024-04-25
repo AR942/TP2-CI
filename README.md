@@ -15,8 +15,7 @@ python -m unittest
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
+from sklearn.manifold import TSNE
 
 # Charger les données
 data = pd.read_csv("donnees.csv")
@@ -32,20 +31,21 @@ non_paintest_users_sample = np.random.choice(non_paintest_users, size=1000, repl
 selected_users = np.concatenate((paintest_users, non_paintest_users_sample))
 selected_data = data[data['user'].isin(selected_users)]
 
-# Prétraitement des données
+# Prétraitement des données avec une transformation logarithmique
 features = selected_data.drop(columns=['user', 'time', 'is_anomaly'])
-scaler = StandardScaler()
-scaled_features = scaler.fit_transform(features)
+log_transformed_features = np.log1p(features)  # Appliquer une transformation logarithmique en évitant les valeurs nulles
 
-# Réduction de dimensionnalité avec PCA
-pca = PCA(n_components=2)
-pca_data = pca.fit_transform(scaled_features)
+# Réduction de dimensionnalité avec t-SNE
+tsne = TSNE(n_components=2, perplexity=30, random_state=42)
+tsne_data = tsne.fit_transform(log_transformed_features)
 
-# Visualisation des données dans l'espace des composantes principales
+# Assigner une couleur différente aux utilisateurs Paintest et non Paintest
+colors = ['blue' if user in paintest_users else 'red' for user in selected_data['user']]
+
+# Visualisation des données dans l'espace t-SNE
 plt.figure(figsize=(8, 6))
-plt.scatter(pca_data[:, 0], pca_data[:, 1], c=selected_data['user'].apply(lambda x: 'Paintest' if x in paintest_users else 'Non Paintest'), cmap='coolwarm', alpha=0.5)
-plt.xlabel('PC1')
-plt.ylabel('PC2')
-plt.title('PCA - Utilisateurs Paintest vs Non Paintest (échantillon réduit)')
-plt.colorbar(label='Utilisateur')
+plt.scatter(tsne_data[:, 0], tsne_data[:, 1], c=colors, alpha=0.5)
+plt.xlabel('t-SNE Dimension 1')
+plt.ylabel('t-SNE Dimension 2')
+plt.title('t-SNE - Utilisateurs Paintest vs Non Paintest (échantillon réduit)')
 plt.show()
