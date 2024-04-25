@@ -47,8 +47,9 @@ daily_behavior_paintest['user'] = paintest_data['user'].values
 
 # Visualisation des tendances temporelles pour les utilisateurs Paintest avec les heures sur l'axe des abscisses
 plt.figure(figsize=(12, 6))
-for user, group in daily_behavior_paintest.groupby('user'):
-    plt.plot(group['hour'], group['PCA'], label=f'{user} PCA')
+for i, (user, group) in enumerate(daily_behavior_paintest.groupby('user')):
+    offset = i * 0.2  # Décalage de 0.2 unité pour chaque utilisateur
+    plt.plot(group['hour'], group['PCA'] + offset, label=f'{user} PCA')
 
 plt.title('Tendances Temporelles des Comportements Utilisateurs Paintest (PCA)')
 plt.xlabel('Heure')
