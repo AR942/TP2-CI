@@ -29,39 +29,29 @@ paintest_data = data[data['user'].isin(paintest_users)]
 # Convertir la colonne 'time' en format datetime
 paintest_data['time'] = pd.to_datetime(paintest_data['time'])
 
-# Tri des données par ordre chronologique
-paintest_data.sort_values(by='time', inplace=True)
-
-# Segmentation des données par jour
-paintest_data['date'] = paintest_data['time'].dt.date
-
 # Prétraitement des données avec une transformation logarithmique
-features = paintest_data.drop(columns=['user', 'time', 'is_anomaly'])
+features = paintest_data.drop(columns=['user', 'is_anomaly'])
 numeric_features = features.select_dtypes(include=[np.number])
 
 # Application de la transformation logarithmique
 log_transformed_features = np.log1p(numeric_features)
 
 # Réduction de dimensionnalité avec PCA
-pca = PCA(n_components=2)
+pca = PCA(n_components=1)  # Utilisation d'une seule composante principale
 pca_data = pca.fit_transform(log_transformed_features)
 
 # Création du DataFrame daily_behavior_paintest avec la colonne de dates correctement remplie
-daily_behavior_paintest = pd.DataFrame(pca_data, columns=['PC1', 'PC2'])
-daily_behavior_paintest['date'] = paintest_data['date'].values  # Utiliser les valeurs de la colonne 'date' sans conversion
+daily_behavior_paintest = pd.DataFrame(pca_data, columns=['PCA'])
+daily_behavior_paintest['hour'] = paintest_data['time'].dt.hour
 daily_behavior_paintest['user'] = paintest_data['user'].values
 
-# Visualisation des tendances temporelles pour les utilisateurs Paintest avec des lignes continues
+# Visualisation des tendances temporelles pour les utilisateurs Paintest avec les heures sur l'axe des abscisses
 plt.figure(figsize=(12, 6))
 for user, group in daily_behavior_paintest.groupby('user'):
-    plt.plot(group['date'], group['PC1'], label=f'{user} PC1')
-    plt.plot(group['date'], group['PC2'], label=f'{user} PC2')
+    plt.plot(group['hour'], group['PCA'], label=f'{user} PCA')
 
 plt.title('Tendances Temporelles des Comportements Utilisateurs Paintest (PCA)')
-plt.xlabel('Date')
+plt.xlabel('Heure')
 plt.ylabel('Valeur PCA')
 plt.legend()
-plt.show() 
-
-
-
+plt.show()
