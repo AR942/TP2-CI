@@ -12,7 +12,6 @@ test the app:
 python -m unittest 
 
 
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,7 +35,7 @@ paintest_data.sort_values(by='time', inplace=True)
 # Segmentation des données par jour
 paintest_data['date'] = paintest_data['time'].dt.date
 
-# Extraction des valeurs numériques pour la transformation logarithmique
+# Prétraitement des données avec une transformation logarithmique
 features = paintest_data.drop(columns=['user', 'time', 'is_anomaly'])
 numeric_features = features.select_dtypes(include=[np.number])
 
@@ -47,17 +46,22 @@ log_transformed_features = np.log1p(numeric_features)
 pca = PCA(n_components=2)
 pca_data = pca.fit_transform(log_transformed_features)
 
-# Analyse des comportements par jour pour les utilisateurs Paintest
+# Création du DataFrame daily_behavior_paintest avec la colonne de dates correctement remplie
 daily_behavior_paintest = pd.DataFrame(pca_data, columns=['PC1', 'PC2'])
-daily_behavior_paintest['date'] = paintest_data['date']
+daily_behavior_paintest['date'] = paintest_data['date'].values  # Utiliser les valeurs de la colonne 'date' sans conversion
+daily_behavior_paintest['user'] = paintest_data['user'].values
 
-# Visualisation des tendances temporelles pour les utilisateurs Paintest
+# Visualisation des tendances temporelles pour les utilisateurs Paintest avec des lignes continues
 plt.figure(figsize=(12, 6))
-for date, group in daily_behavior_paintest.groupby('date'):
-    plt.scatter(group['PC1'], group['PC2'], label=date)
+for user, group in daily_behavior_paintest.groupby('user'):
+    plt.plot(group['date'], group['PC1'], label=f'{user} PC1')
+    plt.plot(group['date'], group['PC2'], label=f'{user} PC2')
 
 plt.title('Tendances Temporelles des Comportements Utilisateurs Paintest (PCA)')
-plt.xlabel('PC1')
-plt.ylabel('PC2')
-plt.legend(title='Date')
-plt.show()
+plt.xlabel('Date')
+plt.ylabel('Valeur PCA')
+plt.legend()
+plt.show() 
+
+
+
