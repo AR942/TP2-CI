@@ -27,7 +27,7 @@ paintest_users = ['user1', 'user2', 'user3']  # Remplacer par les utilisateurs P
 # Filtrer les données pour inclure uniquement les utilisateurs Paintest
 paintest_data = data[data['user'].isin(paintest_users)]
 
-# Convertir la colonne 'time' en format datetime si nécessaire
+# Convertir la colonne 'time' en format datetime
 paintest_data['time'] = pd.to_datetime(paintest_data['time'])
 
 # Tri des données par ordre chronologique
@@ -36,9 +36,12 @@ paintest_data.sort_values(by='time', inplace=True)
 # Segmentation des données par jour
 paintest_data['date'] = paintest_data['time'].dt.date
 
-# Prétraitement des données avec une transformation logarithmique
+# Extraction des valeurs numériques pour la transformation logarithmique
 features = paintest_data.drop(columns=['user', 'time', 'is_anomaly'])
-log_transformed_features = np.log1p(features)  # Appliquer une transformation logarithmique en évitant les valeurs nulles
+numeric_features = features.select_dtypes(include=[np.number])
+
+# Application de la transformation logarithmique
+log_transformed_features = np.log1p(numeric_features)
 
 # Réduction de dimensionnalité avec PCA
 pca = PCA(n_components=2)
