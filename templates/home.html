@@ -12,35 +12,74 @@ import seaborn as sns
 # Charger votre DataFrame (remplacez 'df' par le nom de votre DataFrame)
 # df = ...
 
-# Sélectionner les colonnes catégoriques
-categorical_cols = df.select_dtypes(include=['object'])
+# Assurez-vous que la colonne date est de type datetime
+df['date'] = pd.to_datetime(df['date'])
 
-# Paramètres esthétiques
-sns.set(style="whitegrid")
-plt.figure(figsize=(18, 12))
-
-# Diagrammes en barres (bar plots)
-for i, col in enumerate(categorical_cols.columns):
-    plt.subplot(3, 3, i+1)
-    sns.countplot(y=col, data=categorical_cols, palette="Set3", order=categorical_cols[col].value_counts().index)
-    plt.title(f"Diagramme en barres de {col}")
-
-# Diagrammes circulaires (pie charts)
-plt.subplot(3, 3, len(categorical_cols.columns)+1)
-for col in categorical_cols.columns:
-    df[col].value_counts().plot.pie(autopct='%1.1f%%', startangle=140)
-    plt.title("Diagramme circulaire")
-
-# Heatmap de corrélation entre variables catégoriques
-plt.subplot(3, 3, len(categorical_cols.columns)+2)
-sns.heatmap(categorical_cols.corr(), annot=True, cmap='coolwarm', fmt=".2f")
-plt.title("Heatmap de corrélation")
-
-# Diagrammes en violon (violin plots)
-for i, col in enumerate(categorical_cols.columns):
-    plt.subplot(3, 3, len(categorical_cols.columns)+i+3)
-    sns.violinplot(y=col, x='target_variable', data=df, palette="Set2")
-    plt.title(f"Violin plot de {col} vs target_variable")
-
-plt.tight_layout()
+# Analyse temporelle : Nombre d'événements par utilisateur au fil du temps
+plt.figure(figsize=(12, 6))
+df.groupby([df['date'].dt.date, 'user']).size().unstack().plot()
+plt.title('Nombre d\'événements par utilisateur au fil du temps')
+plt.xlabel('Date')
+plt.ylabel('Nombre d\'événements')
+plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
 plt.show()
+
+# Analyse hebdomadaire
+plt.figure(figsize=(12, 6))
+df.groupby([df['date'].dt.to_period('W'), 'user']).size().unstack().plot()
+plt.title('Nombre d\'événements par utilisateur par semaine')
+plt.xlabel('Semaine')
+plt.ylabel('Nombre d\'événements')
+plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
+plt.show()
+
+# Analyse des jours de la semaine
+df['day_of_week'] = df['date'].dt.day_name()
+plt.figure(figsize=(8, 5))
+sns.countplot(x='day_of_week', data=df, hue='user')
+plt.title('Nombre d\'événements par jour de la semaine et par utilisateur')
+plt.xlabel('Jour de la semaine')
+plt.ylabel('Nombre d\'événements')
+plt.xticks(rotation=45)
+plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
+plt.show()
+
+# Analyse des heures de la journée
+df['hour_of_day'] = df['date'].dt.hour
+plt.figure(figsize=(10, 6))
+sns.countplot(x='hour_of_day', data=df, hue='user')
+plt.title('Nombre d\'événements par heure de la journée et par utilisateur')
+plt.xlabel('Heure de la journée')
+plt.ylabel('Nombre d\'événements')
+plt.xticks(rotation=45)
+plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
+plt.show()
+
+# Analyse de la durée entre les événements
+df['time_diff'] = df.groupby('user')['date'].diff().dt.total_seconds() / 3600
+plt.figure(figsize=(10, 6))
+sns.histplot(data=df, x='time_diff', bins=30, kde=True, hue='user', multiple='stack')
+plt.title('Distribution de la durée entre les événements par utilisateur')
+plt.xlabel('Durée entre les événements (heures)')
+plt.ylabel('Fréquence')
+plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
+plt.show()
+
+# Modélisation prédictive (exemple de régression linéaire)
+from sklearn.linear_model import LinearRegression
+
+X = df['date'].dt.dayofyear.values.reshape(-1, 1)
+y = df.groupby('user').size().values.reshape(-1, 1)
+
+model = LinearRegression()
+model.fit(X, y)
+
+plt.figure(figsize=(12, 6))
+for i, user in enumerate(df['user'].unique()):
+    plt.scatter(X, y[i], label=user)
+plt.plot(X, model.predict(X), color='red')
+plt.title('Modélisation prédictive : Nombre d\'événements par utilisateur au fil de l\'année')
+plt.xlabel('Jour de l\'année')
+plt.ylabel('Nombre d\'événements')
+plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
+plt.show(
