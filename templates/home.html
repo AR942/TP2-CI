@@ -4,9 +4,7 @@
     </body>
 </html>
 
-Bien sûr ! Voici une extension du code précédent avec quelques diagrammes supplémentaires :
 
-```python
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -14,61 +12,35 @@ import seaborn as sns
 # Charger votre DataFrame (remplacez 'df' par le nom de votre DataFrame)
 # df = ...
 
-# Sélectionner les colonnes numériques
-numeric_cols = df.select_dtypes(include=['float64', 'int64'])
+# Sélectionner les colonnes catégoriques
+categorical_cols = df.select_dtypes(include=['object'])
 
 # Paramètres esthétiques
 sns.set(style="whitegrid")
 plt.figure(figsize=(18, 12))
 
-# Histogrammes
-plt.subplot(3, 4, 1)
-for col in numeric_cols.columns:
-    sns.histplot(data=numeric_cols[col], bins=20, kde=True, alpha=0.5)
-plt.title("Histogrammes")
+# Diagrammes en barres (bar plots)
+for i, col in enumerate(categorical_cols.columns):
+    plt.subplot(3, 3, i+1)
+    sns.countplot(y=col, data=categorical_cols, palette="Set3", order=categorical_cols[col].value_counts().index)
+    plt.title(f"Diagramme en barres de {col}")
 
-# Diagrammes en boîte
-plt.subplot(3, 4, 2)
-sns.boxplot(data=numeric_cols, orient="h", palette="Set2")
-plt.title("Diagrammes en boîte")
+# Diagrammes circulaires (pie charts)
+plt.subplot(3, 3, 4)
+for col in categorical_cols.columns:
+    df[col].value_counts().plot.pie(autopct='%1.1f%%', startangle=140)
+    plt.title("Diagramme circulaire")
 
-# Diagrammes de densité
-for i, col in enumerate(numeric_cols.columns):
-    plt.subplot(3, 4, i+5)
-    sns.kdeplot(data=numeric_cols[col], shade=True)
-    plt.title(col)
+# Heatmap de corrélation entre variables catégoriques
+plt.subplot(3, 3, 5)
+sns.heatmap(categorical_cols.corr(), annot=True, cmap='coolwarm', fmt=".2f")
+plt.title("Heatmap de corrélation")
 
-# Matrice de corrélation
-plt.subplot(3, 4, 3)
-sns.heatmap(numeric_cols.corr(), annot=True, cmap='coolwarm', fmt=".2f")
-plt.title("Matrice de corrélation")
-
-# Diagrammes de dispersion
-plt.subplot(3, 4, 9)
-sns.pairplot(data=numeric_cols)
-
-# Diagrammes en violon
-plt.subplot(3, 4, 10)
-for col in numeric_cols.columns:
-    sns.violinplot(y=numeric_cols[col])
-plt.title("Diagrammes en violon")
-
-# Distribution cumulée
-plt.subplot(3, 4, 4)
-for col in numeric_cols.columns:
-    sns.histplot(data=numeric_cols[col], bins=20, kde=True, cumulative=True, stat="density", linewidth=0)
-plt.title("Distribution cumulée")
-
-# Diagrammes en barres pour les variables catégorielles
-categorical_cols = df.select_dtypes(include=['object'])
-if not categorical_cols.empty:
-    plt.subplot(3, 4, 8)
-    for col in categorical_cols.columns:
-        sns.countplot(y=col, data=categorical_cols, palette="Set3", order=categorical_cols[col].value_counts().index)
-    plt.title("Diagrammes en barres (catégorielles)")
+# Diagrammes en violon (violin plots)
+for i, col in enumerate(categorical_cols.columns):
+    plt.subplot(3, 3, i+7)
+    sns.violinplot(x=col, y='target_variable', data=df, palette="Set2")
+    plt.title(f"Violin plot de {col} vs target_variable")
 
 plt.tight_layout()
 plt.show()
-```
-
-Cela ajoute un diagramme pour la distribution cumulée des données ainsi que des diagrammes en barres pour les variables catégorielles s'il y en a dans votre DataFrame.
