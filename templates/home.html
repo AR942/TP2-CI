@@ -12,13 +12,22 @@ import seaborn as sns
 # Charger votre DataFrame (remplacez 'df' par le nom de votre DataFrame)
 # df = ...
 
+# Calculer le nombre d'événements par utilisateur
+user_activity = df['user'].value_counts()
+
+# Sélectionner les utilisateurs les plus actifs (par exemple, les 10 utilisateurs avec le plus grand nombre d'événements)
+top_users = user_activity.head(10).index.tolist()
+
+# Filtrer les données pour inclure uniquement les événements des utilisateurs les plus actifs
+df_top_users = df[df['user'].isin(top_users)]
+
 # Assurez-vous que la colonne date est de type datetime
-df['date'] = pd.to_datetime(df['date'])
+df_top_users['date'] = pd.to_datetime(df_top_users['date'])
 
 # Analyse temporelle : Nombre d'événements par utilisateur au fil du temps
 plt.figure(figsize=(12, 6))
-df.groupby([df['date'].dt.date, 'user']).size().unstack().plot()
-plt.title('Nombre d\'événements par utilisateur au fil du temps')
+df_top_users.groupby([df_top_users['date'].dt.date, 'user']).size().unstack().plot()
+plt.title('Nombre d\'événements par utilisateur au fil du temps (utilisateurs les plus actifs)')
 plt.xlabel('Date')
 plt.ylabel('Nombre d\'événements')
 plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
@@ -26,18 +35,18 @@ plt.show()
 
 # Analyse hebdomadaire
 plt.figure(figsize=(12, 6))
-df.groupby([df['date'].dt.to_period('W'), 'user']).size().unstack().plot()
-plt.title('Nombre d\'événements par utilisateur par semaine')
+df_top_users.groupby([df_top_users['date'].dt.to_period('W'), 'user']).size().unstack().plot()
+plt.title('Nombre d\'événements par utilisateur par semaine (utilisateurs les plus actifs)')
 plt.xlabel('Semaine')
 plt.ylabel('Nombre d\'événements')
 plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
 plt.show()
 
 # Analyse des jours de la semaine
-df['day_of_week'] = df['date'].dt.day_name()
+df_top_users['day_of_week'] = df_top_users['date'].dt.day_name()
 plt.figure(figsize=(8, 5))
-sns.countplot(x='day_of_week', data=df, hue='user')
-plt.title('Nombre d\'événements par jour de la semaine et par utilisateur')
+sns.countplot(x='day_of_week', data=df_top_users, hue='user')
+plt.title('Nombre d\'événements par jour de la semaine et par utilisateur (utilisateurs les plus actifs)')
 plt.xlabel('Jour de la semaine')
 plt.ylabel('Nombre d\'événements')
 plt.xticks(rotation=45)
@@ -45,10 +54,10 @@ plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
 plt.show()
 
 # Analyse des heures de la journée
-df['hour_of_day'] = df['date'].dt.hour
+df_top_users['hour_of_day'] = df_top_users['date'].dt.hour
 plt.figure(figsize=(10, 6))
-sns.countplot(x='hour_of_day', data=df, hue='user')
-plt.title('Nombre d\'événements par heure de la journée et par utilisateur')
+sns.countplot(x='hour_of_day', data=df_top_users, hue='user')
+plt.title('Nombre d\'événements par heure de la journée et par utilisateur (utilisateurs les plus actifs)')
 plt.xlabel('Heure de la journée')
 plt.ylabel('Nombre d\'événements')
 plt.xticks(rotation=45)
@@ -56,10 +65,10 @@ plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
 plt.show()
 
 # Analyse de la durée entre les événements
-df['time_diff'] = df.groupby('user')['date'].diff().dt.total_seconds() / 3600
+df_top_users['time_diff'] = df_top_users.groupby('user')['date'].diff().dt.total_seconds() / 3600
 plt.figure(figsize=(10, 6))
-sns.histplot(data=df, x='time_diff', bins=30, kde=True, hue='user', multiple='stack')
-plt.title('Distribution de la durée entre les événements par utilisateur')
+sns.histplot(data=df_top_users, x='time_diff', bins=30, kde=True, hue='user', multiple='stack')
+plt.title('Distribution de la durée entre les événements par utilisateur (utilisateurs les plus actifs)')
 plt.xlabel('Durée entre les événements (heures)')
 plt.ylabel('Fréquence')
 plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
@@ -68,18 +77,18 @@ plt.show()
 # Modélisation prédictive (exemple de régression linéaire)
 from sklearn.linear_model import LinearRegression
 
-X = df['date'].dt.dayofyear.values.reshape(-1, 1)
-y = df.groupby('user').size().values.reshape(-1, 1)
+X = df_top_users['date'].dt.dayofyear.values.reshape(-1, 1)
+y = df_top_users.groupby('user').size().values.reshape(-1, 1)
 
 model = LinearRegression()
 model.fit(X, y)
 
 plt.figure(figsize=(12, 6))
-for i, user in enumerate(df['user'].unique()):
+for i, user in enumerate(top_users):
     plt.scatter(X, y[i], label=user)
 plt.plot(X, model.predict(X), color='red')
-plt.title('Modélisation prédictive : Nombre d\'événements par utilisateur au fil de l\'année')
+plt.title('Modélisation prédictive : Nombre d\'événements par utilisateur au fil de l\'année (utilisateurs les plus actifs)')
 plt.xlabel('Jour de l\'année')
 plt.ylabel('Nombre d\'événements')
 plt.legend(title='Utilisateur', loc='upper right', bbox_to_anchor=(1.25, 1))
-plt.show(
+plt.show()
