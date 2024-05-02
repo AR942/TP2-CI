@@ -3,3 +3,52 @@
         <h1>Hello</h1>
     </body>
 </html>
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Charger votre DataFrame (remplacez 'df' par le nom de votre DataFrame)
+# df = ...
+
+# Sélectionner les colonnes numériques
+numeric_cols = df.select_dtypes(include=['float64', 'int64'])
+
+# Afficher les histogrammes pour chaque colonne numérique
+numeric_cols.hist(bins=20, figsize=(15, 10))
+plt.tight_layout()
+plt.show()
+
+# Afficher les diagrammes en boîte pour chaque colonne numérique
+plt.figure(figsize=(15, 10))
+sns.boxplot(data=numeric_cols)
+plt.xticks(rotation=45)
+plt.show()
+
+# Afficher les diagrammes de densité pour chaque colonne numérique
+plt.figure(figsize=(15, 10))
+for i, col in enumerate(numeric_cols.columns):
+    plt.subplot(3, 3, i+1)
+    sns.kdeplot(data=numeric_cols[col], shade=True)
+    plt.title(col)
+plt.tight_layout()
+plt.show()
+
+# Afficher la matrice de corrélation
+plt.figure(figsize=(12, 8))
+sns.heatmap(numeric_cols.corr(), annot=True, cmap='coolwarm', fmt=".2f")
+plt.title("Matrice de corrélation")
+plt.show()
+
+# Afficher les diagrammes de dispersion pour chaque paire de colonnes numériques
+sns.pairplot(data=numeric_cols)
+plt.show()
+
+# Afficher les diagrammes en violon pour chaque colonne numérique
+plt.figure(figsize=(15, 10))
+for i, col in enumerate(numeric_cols.columns):
+    plt.subplot(3, 3, i+1)
+    sns.violinplot(y=numeric_cols[col])
+    plt.title(col)
+plt.tight_layout()
+plt.show()
